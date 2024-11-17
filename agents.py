@@ -7,6 +7,9 @@ load_dotenv()
 
 class AgentSystem:
     def __init__(self):
+        # Create workspace directory if it doesn't exist
+        os.makedirs("workspace", exist_ok=True)
+        
         # Configure agents with specific roles
         self.config = {
             "temperature": 0.7,
@@ -41,7 +44,7 @@ class AgentSystem:
             human_input_mode="TERMINATE",
             max_consecutive_auto_reply=10,
             is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"),
-            code_execution_config={"work_dir": "workspace"}
+            code_execution_config={"work_dir": "workspace", "use_docker": False}
         )
 
     def start_workflow(self, initial_prompt: str):
