@@ -54,11 +54,15 @@ class AgentSystem:
             llm_config=self.config
         )
 
-    def start_workflow(self, initial_prompt: str):
+    def start_workflow(self, initial_prompt: str, use_snowflake: bool):
         """Start the workflow with an initial prompt"""
         # Initialize the group chat
+        agents = [self.user_proxy, self.researcher, self.designer, self.coder]
+        if use_snowflake:
+            agents.append(self.snowflake_coder)
+
         groupchat = autogen.GroupChat(
-            agents=[self.user_proxy, self.researcher, self.designer, self.coder],
+            agents=agents,
             messages=[],
             max_round=50
         )
