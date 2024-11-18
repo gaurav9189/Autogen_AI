@@ -69,6 +69,26 @@ class AgentSystem:
         
         manager = autogen.GroupChatManager(groupchat=groupchat)
 
+        if use_snowflake:
+            # Execute Snowflake-specific setup
+            import snowflake.connector
+
+            conn = snowflake.connector.connect(
+                user=os.getenv("SNOWFLAKE_USER"),
+                password=os.getenv("SNOWFLAKE_PASSWORD"),
+                account=os.getenv("SNOWFLAKE_ACCOUNT")
+            )
+
+            try:
+                with conn.cursor() as cur:
+                    cur.execute("CREATE DATABASE IF NOT EXISTS Aider_db")
+                    cur.execute("USE DATABASE Aider_db")
+                    cur.execute("CREATE SCHEMA IF NOT EXISTS raw")
+                    cur.execute("USE SCHEMA raw")
+                    cur.execute("CREATE TABLE IF NOT EXISTS employee (id INT, name STRING, position STRING)")
+            finally:
+                conn.close()
+
         # Start the chat with the initial prompt
         self.user_proxy.initiate_chat(
             manager,
