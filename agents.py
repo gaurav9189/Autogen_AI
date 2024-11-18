@@ -58,7 +58,9 @@ class AgentSystem:
         # Snowflake Coder Agent
         self.snowflake_coder = autogen.AssistantAgent(
             name="snowflake_coder",
-            system_message="You are a Snowflake coding expert. Execute Snowflake-specific code using the Python connector.",
+            system_message="""You are a Snowflake coding expert. Execute Snowflake-specific code using the Python connector.
+            Always import the connection from snowflake_connection.py first in your code blocks.
+            Focus on writing clear, executable code blocks that handle errors appropriately.""",
             llm_config=self.config
         )
 
@@ -80,10 +82,28 @@ class AgentSystem:
             # Establish Snowflake connection
             conn = self.get_snowflake_connection()
             # Update code execution config with Snowflake connection
-            self.user_proxy._code_execution_config = {
-                **self.user_proxy._code_execution_config,
-                "locals": {"snowflake_conn": conn}
-            }
+            self.user_proxy._code_execution_config.update({
+                "use_docker": False,
+                "work_dir": "workspace",
+                "last_n_messages": 3,
+                "timeout": 60
+            })
+            # Make connection available in workspace
+            with open("workspace/snowflake_connection.py", "w") as f:
+                f.write("""
+import snowflake.connector
+conn = snowflake.connector.connect(
+    user='{}',
+    password='{}',
+    account='{}',
+    warehouse='{}',
+)
+                """.format(
+                    os.getenv("SNOWFLAKE_USER"),
+                    os.getenv("SNOWFLAKE_PASSWORD"), 
+                    os.getenv("SNOWFLAKE_ACCOUNT"),
+                    os.getenv("SNOWFLAKE_WAREHOUSE")
+                ))
             agents.append(self.snowflake_coder)
         else:
             agents.append(self.coder)
