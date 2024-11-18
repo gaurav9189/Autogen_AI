@@ -57,8 +57,9 @@ class AgentSystem:
             llm_config=self.config
         )
 
-    def start_workflow(self, initial_prompt: str, use_snowflake: bool):
+    def get_snowflake_connection(self):
         import snowflake.connector
+        """Establish a connection to Snowflake"""
         return snowflake.connector.connect(
             user=os.getenv("SNOWFLAKE_USER"),
             password=os.getenv("SNOWFLAKE_PASSWORD"),
@@ -67,7 +68,7 @@ class AgentSystem:
             database=os.getenv("SNOWFLAKE_DATABASE"),
             schema=os.getenv("SNOWFLAKE_SCHEMA")
         )
-        """Start the workflow with an initial prompt"""
+    def start_workflow(self, initial_prompt: str, use_snowflake: bool):
         # Initialize the group chat
         agents = [self.user_proxy, self.researcher, self.designer]
         if use_snowflake:
