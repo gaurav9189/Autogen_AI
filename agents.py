@@ -73,11 +73,18 @@ class AgentSystem:
             # Execute Snowflake-specific setup
             import snowflake.connector
 
-            conn = snowflake.connector.connect(
-                user=os.getenv("SNOWFLAKE_USER"),
-                password=os.getenv("SNOWFLAKE_PASSWORD"),
-                account=os.getenv("SNOWFLAKE_ACCOUNT")
-            )
+            try:
+                conn = snowflake.connector.connect(
+                    user=os.getenv("SNOWFLAKE_USER"),
+                    password=os.getenv("SNOWFLAKE_PASSWORD"),
+                    account=os.getenv("SNOWFLAKE_ACCOUNT"),
+                    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                    database=os.getenv("SNOWFLAKE_DATABASE"),
+                    schema=os.getenv("SNOWFLAKE_SCHEMA")
+                )
+            except snowflake.connector.errors.Error as e:
+                print(f"Failed to connect to Snowflake: {e}")
+                return
 
             try:
                 with conn.cursor() as cur:
