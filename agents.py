@@ -39,15 +39,20 @@ class AgentSystem:
             llm_config=self.config
         )
 
-        # User Proxy Agent
+        # User Proxy Agent with code execution config
+        code_execution_config = {
+            "work_dir": "workspace",
+            "use_docker": False,
+            "last_n_messages": 3,
+            "timeout": 60,
+        }
+        
         self.user_proxy = autogen.UserProxyAgent(
             name="user_proxy",
             human_input_mode="TERMINATE",
             max_consecutive_auto_reply=10,
-            is_termination_msg=lambda x: x.get(
-                "content", "").rstrip().endswith("TERMINATE"),
-            code_execution_config={
-                "work_dir": "workspace", "use_docker": False}
+            is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"),
+            code_execution_config=code_execution_config
         )
 
         # Snowflake Coder Agent
@@ -74,8 +79,11 @@ class AgentSystem:
         if use_snowflake:
             # Establish Snowflake connection
             conn = self.get_snowflake_connection()
-            # Add connection to user_proxy's code execution context
-            self.user_proxy.code_execution_config["locals"] = {"snowflake_conn": conn}
+            # Update code execution config with Snowflake connection
+            self.user_proxy._code_execution_config = {
+                **self.user_proxy._code_execution_config,
+                "locals": {"snowflake_conn": conn}
+            }
             agents.append(self.snowflake_coder)
         else:
             agents.append(self.coder)
