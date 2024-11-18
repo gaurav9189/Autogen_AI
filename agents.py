@@ -51,15 +51,25 @@ class AgentSystem:
         self.snowflake_coder = autogen.AssistantAgent(
             name="snowflake_coder",
             system_message="You are a Snowflake coding expert. Execute Snowflake-specific code using the Python connector.",
-            llm_config=self.config
+            llm_config=self.config,
+            snowflake_config={
+                "user": os.getenv("SNOWFLAKE_USER"),
+                "password": os.getenv("SNOWFLAKE_PASSWORD"),
+                "account": os.getenv("SNOWFLAKE_ACCOUNT"),
+                "warehouse": os.getenv("SNOWFLAKE_WAREHOUSE"),
+                "database": os.getenv("SNOWFLAKE_DATABASE"),
+                "schema": os.getenv("SNOWFLAKE_SCHEMA")
+            }
         )
 
     def start_workflow(self, initial_prompt: str, use_snowflake: bool):
         """Start the workflow with an initial prompt"""
         # Initialize the group chat
-        agents = [self.user_proxy, self.researcher, self.designer, self.coder]
+        agents = [self.user_proxy, self.researcher, self.designer]
         if use_snowflake:
             agents.append(self.snowflake_coder)
+        else:
+            agents.append(self.coder)
 
         groupchat = autogen.GroupChat(
             agents=agents,
@@ -97,16 +107,31 @@ class AgentSystem:
                 conn.close()
 
         # Start the chat with the initial prompt
-        self.user_proxy.initiate_chat(
-            manager,
-            message=f"""
-            Project Request: {initial_prompt}
-            
-            Please follow this workflow:
-            1. Researcher: Analyze requirements and research best practices
-            2. Designer: Create technical design based on research
-            3. Coder: Generate implementation code
-            
-            Each agent should wait for the previous agent to complete their task.
-            """
-        )
+        if use_snowflake:
+            self.user_proxy.initiate_chat(
+                manager,
+                message=f"""
+                Project Request: {initial_prompt}
+                
+                Please follow this workflow:
+                1. Researcher: Analyze requirements and research best practices
+                2. Designer: Create Snowflake-specific technical design
+                3. Snowflake Coder: Generate and execute Snowflake-specific code
+                
+                Each agent should wait for the previous agent to complete their task.
+                """
+            )
+        else:
+            self.user_proxy.initiate_chat(
+                manager,
+                message=f"""
+                Project Request: {initial_prompt}
+                
+                Please follow this workflow:
+                1. Researcher: Analyze requirements and research best practices
+                2. Designer: Create technical design based on research
+                3. Coder: Generate implementation code
+                
+                Each agent should wait for the previous agent to complete their task.
+                """
+            )
