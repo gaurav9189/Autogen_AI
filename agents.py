@@ -72,50 +72,10 @@ class AgentSystem:
         # Initialize the group chat
         agents = [self.user_proxy, self.researcher, self.designer]
         if use_snowflake:
-            agents.append(self.snowflake_coder)
-        else:
-            agents.append(self.coder)
-
-        groupchat = autogen.GroupChat(
-            agents=agents,
-            messages=[],
-            max_round=50
-        )
-
-        manager = autogen.GroupChatManager(groupchat=groupchat)
-
-        # Start the chat with the initial prompt
-        if use_snowflake:
-            self.user_proxy.initiate_chat(
-                manager,
-                message=f"""
-                Project Request: {initial_prompt}
-                
-                Please follow this workflow:
-                1. Researcher: Analyze requirements and research best practices
-                2. Designer: Create Snowflake-specific technical design
-                3. Snowflake Coder: Generate and execute Snowflake-specific code which uses the Python connector
-                
-                Each agent should wait for the previous agent to complete their task.
-                """
-            )
-        else:
-            self.user_proxy.initiate_chat(
-                manager,
-                message=f"""
-                Project Request: {initial_prompt}
-                
-                Please follow this workflow:
-                1. Researcher: Analyze requirements and research best practices
-                2. Designer: Create technical design based on research
-                3. Coder: Generate implementation code
-                
-                Each agent should wait for the previous agent to complete their task.
-                """
-            )
-        # Initialize the group chat
-        agents = [self.user_proxy, self.researcher, self.designer]
-        if use_snowflake:
+            # Establish Snowflake connection
+            conn = self.get_snowflake_connection()
+            # Add connection to user_proxy's code execution context
+            self.user_proxy.code_execution_config["locals"] = {"snowflake_conn": conn}
             agents.append(self.snowflake_coder)
         else:
             agents.append(self.coder)
