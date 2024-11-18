@@ -12,7 +12,7 @@ def run_workflow(prompt, file, use_snowflake):
     elif not prompt:
         # If neither prompt nor file is provided, raise an error
         raise click.UsageError("You must provide either a prompt or a file containing the prompt.")
-    """Run the AI agents workflow with the given prompt"""
+    """Run the AI agents workflow with the given prompt and optional Snowflake support"""
     agent_system = AgentSystem()
     agent_system.start_workflow(prompt, use_snowflake)
 
