@@ -47,6 +47,13 @@ class AgentSystem:
             code_execution_config={"work_dir": "workspace", "use_docker": False}
         )
 
+        # Snowflake Coder Agent
+        self.snowflake_coder = autogen.AssistantAgent(
+            name="snowflake_coder",
+            system_message="You are a Snowflake coding expert. Execute Snowflake-specific code using the Python connector.",
+            llm_config=self.config
+        )
+
     def start_workflow(self, initial_prompt: str):
         """Start the workflow with an initial prompt"""
         # Initialize the group chat
