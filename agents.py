@@ -51,15 +51,7 @@ class AgentSystem:
         self.snowflake_coder = autogen.AssistantAgent(
             name="snowflake_coder",
             system_message="You are a Snowflake coding expert. Execute Snowflake-specific code using the Python connector.",
-            llm_config=self.config,
-            snowflake_config={
-                "user": os.getenv("SNOWFLAKE_USER"),
-                "password": os.getenv("SNOWFLAKE_PASSWORD"),
-                "account": os.getenv("SNOWFLAKE_ACCOUNT"),
-                "warehouse": os.getenv("SNOWFLAKE_WAREHOUSE"),
-                "database": os.getenv("SNOWFLAKE_DATABASE"),
-                "schema": os.getenv("SNOWFLAKE_SCHEMA")
-            }
+            llm_config=self.config
         )
 
     def start_workflow(self, initial_prompt: str, use_snowflake: bool):
@@ -79,59 +71,17 @@ class AgentSystem:
         
         manager = autogen.GroupChatManager(groupchat=groupchat)
 
-        if use_snowflake:
-            # Execute Snowflake-specific setup
-            import snowflake.connector
-
-            try:
-                conn = snowflake.connector.connect(
-                    user=os.getenv("SNOWFLAKE_USER"),
-                    password=os.getenv("SNOWFLAKE_PASSWORD"),
-                    account=os.getenv("SNOWFLAKE_ACCOUNT"),
-                    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-                    database=os.getenv("SNOWFLAKE_DATABASE"),
-                    schema=os.getenv("SNOWFLAKE_SCHEMA")
-                )
-            except snowflake.connector.errors.Error as e:
-                print(f"Failed to connect to Snowflake: {e}")
-                return
-
-            try:
-                with conn.cursor() as cur:
-                    cur.execute("CREATE DATABASE IF NOT EXISTS Aider_db")
-                    cur.execute("USE DATABASE Aider_db")
-                    cur.execute("CREATE SCHEMA IF NOT EXISTS raw")
-                    cur.execute("USE SCHEMA raw")
-                    cur.execute("CREATE TABLE IF NOT EXISTS employee (id INT, name STRING, position STRING)")
-            finally:
-                conn.close()
-
         # Start the chat with the initial prompt
-        if use_snowflake:
-            self.user_proxy.initiate_chat(
-                manager,
-                message=f"""
-                Project Request: {initial_prompt}
-                
-                Please follow this workflow:
-                1. Researcher: Analyze requirements and research best practices
-                2. Designer: Create Snowflake-specific technical design
-                3. Snowflake Coder: Generate and execute Snowflake-specific code
-                
-                Each agent should wait for the previous agent to complete their task.
-                """
-            )
-        else:
-            self.user_proxy.initiate_chat(
-                manager,
-                message=f"""
-                Project Request: {initial_prompt}
-                
-                Please follow this workflow:
-                1. Researcher: Analyze requirements and research best practices
-                2. Designer: Create technical design based on research
-                3. Coder: Generate implementation code
-                
-                Each agent should wait for the previous agent to complete their task.
-                """
-            )
+        self.user_proxy.initiate_chat(
+            manager,
+            message=f"""
+            Project Request: {initial_prompt}
+            
+            Please follow this workflow:
+            1. Researcher: Analyze requirements and research best practices
+            2. Designer: Create {'Snowflake-specific' if use_snowflake else 'technical'} design based on research
+            3. {'Snowflake Coder' if use_snowflake else 'Coder'}: Generate {'Snowflake-specific' if use_snowflake else 'implementation'} code
+            
+            Each agent should wait for the previous agent to complete their task.
+            """
+        )
