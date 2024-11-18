@@ -54,18 +54,19 @@ class AgentSystem:
         self.snowflake_coder = autogen.AssistantAgent(
             name="snowflake_coder",
             system_message="You are a Snowflake coding expert. Execute Snowflake-specific code using the Python connector.",
-            llm_config=self.config,
-            snowflake_config={
-                "user": os.getenv("SNOWFLAKE_USER"),
-                "password": os.getenv("SNOWFLAKE_PASSWORD"),
-                "account": os.getenv("SNOWFLAKE_ACCOUNT"),
-                "warehouse": os.getenv("SNOWFLAKE_WAREHOUSE"),
-                "database": os.getenv("SNOWFLAKE_DATABASE"),
-                "schema": os.getenv("SNOWFLAKE_SCHEMA")
-            }
+            llm_config=self.config
         )
 
-    def start_workflow(self, initial_prompt: str, use_snowflake: bool):
+    def get_snowflake_connection(self):
+        import snowflake.connector
+        return snowflake.connector.connect(
+            user=os.getenv("SNOWFLAKE_USER"),
+            password=os.getenv("SNOWFLAKE_PASSWORD"),
+            account=os.getenv("SNOWFLAKE_ACCOUNT"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            schema=os.getenv("SNOWFLAKE_SCHEMA")
+        )
         """Start the workflow with an initial prompt"""
         # Initialize the group chat
         agents = [self.user_proxy, self.researcher, self.designer]
