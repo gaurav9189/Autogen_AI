@@ -15,8 +15,7 @@ class AgentSystem:
         self.config = {
             "temperature": 0.7,
             "model": "gpt-4",
-            "api_key": os.getenv("OPENAI_API_KEY"),
-            "request_timeout": 120
+            "api_key": os.getenv("OPENAI_API_KEY")
         }
 
         # Research Agent
