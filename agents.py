@@ -14,8 +14,9 @@ class AgentSystem:
         # Configure agents with specific roles
         self.config = {
             "temperature": 0.7,
-            "model": "gpt-4o",
-            "api_key": os.getenv("OPENAI_API_KEY")
+            "model": "gpt-4",
+            "api_key": os.getenv("OPENAI_API_KEY"),
+            "request_timeout": 120
         }
 
         # Research Agent
@@ -56,59 +57,22 @@ class AgentSystem:
             code_execution_config=code_execution_config
         )
 
-        # Snowflake Coder Agent
-        self.snowflake_coder = autogen.AssistantAgent(
-            name="snowflake_coder",
-            system_message="""You are a Snowflake coding expert. Execute Snowflake-specific code using the Python connector.
-            Always import the connection from shell variables- SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, SNOWFLAKE_PASSWORD first in your code blocks.
-            Focus on writing clear, executable code blocks that handle errors appropriately.""",
+        # Enhanced Coder Agent
+        self.coder = autogen.AssistantAgent(
+            name="coder",
+            system_message="""You are a coding expert who can write both general Python code and Snowflake-specific code.
+            For Snowflake operations, always use environment variables (SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, etc.) from the shell.
+            Write clear, executable code blocks with proper error handling and debugging messages.
+            Always print status messages to help track execution progress.""",
             llm_config=self.config
         )
 
-    def get_snowflake_connection(self):
-        import snowflake.connector
-        """Establish a connection to Snowflake"""
-        return snowflake.connector.connect(
-            user=os.getenv("SNOWFLAKE_USER"),
-            password=os.getenv("SNOWFLAKE_PASSWORD"),
-            account=os.getenv("SNOWFLAKE_ACCOUNT"),
-            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-            database=os.getenv("SNOWFLAKE_DATABASE"),
-            schema=os.getenv("SNOWFLAKE_SCHEMA")
-        )
-
-    def start_workflow(self, initial_prompt: str, use_snowflake: bool):
-        # Initialize the group chat
-        agents = [self.user_proxy, self.researcher, self.designer]
-        if use_snowflake:
-            # Establish Snowflake connection
-            conn = self.get_snowflake_connection()
-            # Update code execution config with Snowflake connection
-            self.user_proxy._code_execution_config.update({
-                "use_docker": False,
-                "work_dir": "workspace",
-                "last_n_messages": 3,
-                "timeout": 60
-            })
-            # Make connection available in workspace
-            with open("workspace/snowflake_connection.py", "w") as f:
-                f.write("""
-import snowflake.connector
-conn = snowflake.connector.connect(
-    user='{}',
-    password='{}',
-    account='{}',
-    warehouse='{}',
-)
-                """.format(
-                    os.getenv("SNOWFLAKE_USER"),
-                    os.getenv("SNOWFLAKE_PASSWORD"),
-                    os.getenv("SNOWFLAKE_ACCOUNT"),
-                    os.getenv("SNOWFLAKE_WAREHOUSE")
-                ))
-            agents.append(self.snowflake_coder)
-        else:
-            agents.append(self.coder)
+    def start_workflow(self, initial_prompt: str):
+        """Start the agent workflow with enhanced debugging"""
+        print("\n🚀 Starting workflow...")
+        
+        # Initialize the group chat with all agents
+        agents = [self.user_proxy, self.researcher, self.designer, self.coder]
 
         groupchat = autogen.GroupChat(
             agents=agents,
@@ -119,31 +83,22 @@ conn = snowflake.connector.connect(
         manager = autogen.GroupChatManager(groupchat=groupchat)
 
         # Start the chat with the initial prompt
-        if use_snowflake:
-            self.user_proxy.initiate_chat(
-                manager,
-                message=f"""
-                Project Request: {initial_prompt}
-                
-                Please follow this workflow:
-                1. Researcher: Analyze requirements and research best practices
-                2. Designer: Create Snowflake-specific technical design
-                3. Snowflake Coder: Generate and execute Snowflake-specific code which uses the Python connector
-                
-                Each agent should wait for the previous agent to complete their task.
-                """
-            )
-        else:
-            self.user_proxy.initiate_chat(
-                manager,
-                message=f"""
-                Project Request: {initial_prompt}
-                
-                Please follow this workflow:
-                1. Researcher: Analyze requirements and research best practices
-                2. Designer: Create technical design based on research
-                3. Coder: Generate implementation code
-                
-                Each agent should wait for the previous agent to complete their task.
-                """
-            )
+        print("\n📋 Initiating chat with workflow steps...")
+        self.user_proxy.initiate_chat(
+            manager,
+            message=f"""
+            Project Request: {initial_prompt}
+            
+            Please follow this workflow:
+            1. Researcher: Analyze requirements and research best practices
+            2. Designer: Create technical design based on research
+            3. Coder: Generate and execute implementation code
+               - For Snowflake operations, use environment variables
+               - Include status messages and error handling
+               - Test the code execution
+            
+            Each agent should wait for the previous agent to complete their task.
+            Print clear status messages during execution.
+            """
+        )
+        print("\n✅ Workflow completed!")
