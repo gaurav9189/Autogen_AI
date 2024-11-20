@@ -11,30 +11,37 @@ class AgentSystem:
         # Create workspace directory if it doesn't exist
         os.makedirs("workspace", exist_ok=True)
 
-        # Configure common settings for OpenAI
+        # Configure settings for OpenAI
         self.openai_config = {
             "temperature": 0.7,
-            "api_key": os.getenv("OPENAI_API_KEY")
+            "api_key": os.getenv("OPENAI_API_KEY"),
+            "use_openai": True
         }
 
-        # Configure common settings for Anthropic
+        # Configure settings for Anthropic
         self.anthropic_config = {
             "temperature": 0.7,
-            "api_key": os.getenv("ANTHROPIC_API_KEY")
+            "use_anthropic": True,
+            "config_list": [{"model": "claude-2", "api_key": os.getenv("ANTHROPIC_API_KEY")}]
         }
+
+        # Add debug logging for API keys
+        print("\nAPI Key Debug (first 7 chars):")
+        print(f"OpenAI API Key prefix: {os.getenv('OPENAI_API_KEY')[:7] if os.getenv('OPENAI_API_KEY') else 'Not found'}")
+        print(f"Anthropic API Key prefix: {os.getenv('ANTHROPIC_API_KEY')[:7] if os.getenv('ANTHROPIC_API_KEY') else 'Not found'}\n")
 
         # Research Agent with gpt-4o-mini
         self.researcher = autogen.AssistantAgent(
             name="researcher",
             system_message="You are a research expert. Analyze requirements, research best practices, and ask clarifying questions when needed.",
-            llm_config={**self.openai_config, "model": "gpt-4o-mini"}  # Specify model here
+            llm_config={**self.openai_config, "model": "gpt-4"}  # Using standard GPT-4
         )
 
         # Solution Designer with gpt-4o
         self.designer = autogen.AssistantAgent(
             name="designer",
             system_message="You are a solution architect. Create detailed technical designs based on research findings.",
-            llm_config={**self.openai_config, "model": "gpt-4o"}  # Specify model here
+            llm_config={**self.openai_config, "model": "gpt-4"}  # Using standard GPT-4
         )
 
         # User Proxy Agent
@@ -88,7 +95,7 @@ class AgentSystem:
             print(f"Number of rows returned: {len(results)}")
             ```
             """,
-            llm_config={**self.anthropic_config, "model": "anthropic-sonnet-3.5"}  # Specify model here
+            llm_config=self.anthropic_config  # Using Claude-2
         )
 
     def start_workflow(self, initial_prompt: str):
