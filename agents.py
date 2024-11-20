@@ -70,7 +70,7 @@ class AgentSystem:
         """Start the agent workflow with enhanced debugging"""
         print("\n🚀 Starting workflow...")
         print("\n📌 Debug: Creating group chat with agents:")
-        print(f"- User Proxy (executor) in workspace: {self.user_proxy.code_execution_config['work_dir']}")
+        print(f"- User Proxy (executor) in workspace: {self.user_proxy._code_execution_config['work_dir']}")
         print(f"- Researcher: Analysis & Requirements")
         print(f"- Designer: Technical Architecture")
         print(f"- Coder: Implementation")
