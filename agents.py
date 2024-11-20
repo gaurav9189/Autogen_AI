@@ -66,7 +66,11 @@ class AgentSystem:
         self.coder = autogen.AssistantAgent(
             name="coder",
             system_message="""You are a coding expert who can write both general Python code and Snowflake-specific code.
-            IMPORTANT: You must ALWAYS provide code implementation, never just acknowledge or approve designs.
+            CRITICAL INSTRUCTION: You MUST ALWAYS respond with code implementation.
+            - NEVER just acknowledge or approve designs
+            - NEVER just provide suggestions without code
+            - ALWAYS start your response with "Here's the code implementation:"
+            - ALWAYS include code blocks
             
             For Snowflake operations:
             1. Always use environment variables (SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, etc.) from the shell and use python code to connect to Snowflake
@@ -111,10 +115,21 @@ class AgentSystem:
             Please execute this code.
 
             REMEMBER: 
-            - Never just acknowledge or approve designs
-            - Always provide actual code implementation
-            - Always follow the exact format shown above
-            - Always include proper error handling
+            - NEVER just acknowledge or approve designs
+            - NEVER just make suggestions without providing code
+            - ALWAYS start with "Here's the code implementation:"
+            - ALWAYS wrap code in triple backticks with language specification
+            - ALWAYS include proper error handling
+            - ALWAYS end with "Please execute this code."
+            
+            Example of REQUIRED response format:
+            Here's the code implementation:
+            ```python
+            import os
+            print("Current working directory:", os.getcwd())
+            # ... rest of the code
+            ```
+            Please execute this code.
             """,
             llm_config=self.anthropic_config  # Using Claude-3.5
         )
