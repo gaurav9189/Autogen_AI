@@ -29,13 +29,6 @@ class AgentSystem:
             }]
         }
 
-        # Add debug logging for API keys
-        print("\nAPI Key Debug (first 7 chars):")
-        print(
-            f"OpenAI API Key prefix: {os.getenv('OPENAI_API_KEY')[:7] if os.getenv('OPENAI_API_KEY') else 'Not found'}")
-        print(
-            f"Anthropic API Key prefix: {os.getenv('ANTHROPIC_API_KEY')[:7] if os.getenv('ANTHROPIC_API_KEY') else 'Not found'}\n")
-
         # Research Agent with gpt-4o-mini
         self.researcher = autogen.AssistantAgent(
             name="researcher",
@@ -104,7 +97,7 @@ class AgentSystem:
             print(f"Number of rows returned: {len(results)}")
             ```
             """,
-            llm_config=self.anthropic_config  # Using Claude-2
+            llm_config=self.anthropic_config  # Using Claude-3.5
         )
 
     def start_workflow(self, initial_prompt: str):
