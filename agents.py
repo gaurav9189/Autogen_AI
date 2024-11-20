@@ -94,7 +94,8 @@ class AgentSystem:
         print("3. Designer creates technical spec")
         print("4. Coder writes implementation")
         print("5. User Proxy executes any code in workspace directory")
-        self.user_proxy.initiate_chat(
+        # Capture the output from the UserProxyAgent
+        output = self.user_proxy.initiate_chat(
             manager,
             message=f"""
             Project Request: {initial_prompt}
@@ -112,3 +113,4 @@ class AgentSystem:
             """
         )
         print("\n✅ Workflow completed!")
+        return output
