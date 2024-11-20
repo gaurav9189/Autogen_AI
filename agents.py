@@ -23,7 +23,7 @@ class AgentSystem:
             "temperature": 0.7,
             "api_key": os.getenv("ANTHROPIC_API_KEY"),
             "config_list": [{
-                "model": "claude-3.5-sonnet",
+                "model": "claude-3-sonnet-20240229",
                 "api_key": os.getenv("ANTHROPIC_API_KEY"),
                 "api_type": "anthropic"
             }]
