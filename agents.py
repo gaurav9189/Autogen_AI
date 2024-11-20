@@ -34,7 +34,7 @@ class AgentSystem:
 
         # Code Generator
         self.coder = autogen.AssistantAgent(
-            name="coder",
+            name="enhanced_coder",
             system_message="You are a coding expert. Generate implementation code based on technical designs.",
             llm_config=self.config
         )
