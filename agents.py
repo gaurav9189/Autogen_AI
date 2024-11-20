@@ -15,7 +15,7 @@ class AgentSystem:
         self.openai_config = {
             "temperature": 0.7,
             "api_key": os.getenv("OPENAI_API_KEY"),
-            "use_openai": True
+            "config_list": [{"model": "gpt-4", "api_key": os.getenv("OPENAI_API_KEY")}]
         }
 
         # Configure settings for Anthropic
