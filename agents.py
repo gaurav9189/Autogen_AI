@@ -61,7 +61,7 @@ class AgentSystem:
             name="coder",
             system_message="""You are a coding expert who can write both general Python code and Snowflake-specific code.
     For Snowflake operations:
-    1. Always use environment variables (SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, etc.) from the shell
+    1. Always use environment variables (SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, etc.) from the shell and use python code to connect to Snowflake
     2. ALWAYS include these elements in your code:
        - Explicit print statements for all query results
        - Print statements before and after each operation
@@ -98,7 +98,8 @@ class AgentSystem:
         """Start the agent workflow with enhanced debugging"""
         print("\n🚀 Starting workflow...")
         print("\n📌 Debug: Creating group chat with agents:")
-        print(f"- User Proxy (executor) in workspace: {self.user_proxy._code_execution_config['work_dir']}")
+        print(
+            f"- User Proxy (executor) in workspace: {self.user_proxy._code_execution_config['work_dir']}")
         print(f"- Researcher: Analysis & Requirements")
         print(f"- Designer: Technical Architecture")
         print(f"- Coder: Implementation")
