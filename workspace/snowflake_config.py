@@ -1,17 +1,17 @@
-import configparser
+import os
 import snowflake.connector
+from dotenv import load_dotenv
 
-def connect_to_snowflake_from_config():
-    print("Connecting to Snowflake using config file...")
-    config = configparser.ConfigParser()
-    config.read('config.ini')
+def connect_to_snowflake():
+    print("Connecting to Snowflake using environment variables...")
+    load_dotenv()
     try:
         conn = snowflake.connector.connect(
-            account=config['SNOWFLAKE']['ACCOUNT'],
-            user=config['SNOWFLAKE']['USER'],
-            password=config['SNOWFLAKE']['PASSWORD'],
-            role=config['SNOWFLAKE']['ROLE'],
-            warehouse=config['SNOWFLAKE']['WAREHOUSE']
+            account=os.getenv('SNOWFLAKE_ACCOUNT'),
+            user=os.getenv('SNOWFLAKE_USER'),
+            password=os.getenv('SNOWFLAKE_PASSWORD'),
+            role=os.getenv('SNOWFLAKE_ROLE'),
+            warehouse=os.getenv('SNOWFLAKE_WAREHOUSE')
         )
         print("Connection established.")
         return conn
@@ -52,7 +52,7 @@ def list_tables_in_database(cursor, database_name):
 
 def main():
     try:
-        conn = connect_to_snowflake_from_config()
+        conn = connect_to_snowflake()
         cursor = conn.cursor()
 
         print("\nRetrieving all databases...")
