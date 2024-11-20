@@ -51,6 +51,7 @@ class AgentSystem:
             "use_docker": False,
             "last_n_messages": 3,
             "timeout": 60,
+            "verbose": True,
         }
 
         self.user_proxy = autogen.UserProxyAgent(
@@ -59,7 +60,8 @@ class AgentSystem:
             max_consecutive_auto_reply=10,
             is_termination_msg=lambda x: x.get(
                 "content", "").rstrip().endswith("TERMINATE"),
-            code_execution_config=code_execution_config
+            code_execution_config=code_execution_config,
+            verbose=True
         )
 
         # Enhanced Coder Agent with anthropic-sonnet-3.5
@@ -84,7 +86,17 @@ class AgentSystem:
             4. Include proper error handling with try/except blocks
             5. Always close connections properly
             
-            Example format:
+            IMPORTANT: When providing code:
+            1. Always start with "Here's the code implementation:"
+            2. Always wrap code blocks with triple backticks and specify the language:
+            ```python
+            # your code here
+            ```
+            3. After the code block, always say "Please execute this code."
+            4. Wait for confirmation before proceeding.
+            
+            Example response format:
+            Here's the code implementation:
             ```python
             print("Connecting to Snowflake...")
             # connection code here
@@ -96,6 +108,7 @@ class AgentSystem:
                 print(row)
             print(f"Number of rows returned: {len(results)}")
             ```
+            Please execute this code.
             """,
             llm_config=self.anthropic_config  # Using Claude-3.5
         )
