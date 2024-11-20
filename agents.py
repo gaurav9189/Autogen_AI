@@ -14,7 +14,7 @@ class AgentSystem:
         # Configure agents with specific roles
         self.config = {
             "temperature": 0.7,
-            "model": "gpt-4",
+            "model": "gpt-4o",
             "api_key": os.getenv("OPENAI_API_KEY")
         }
 
@@ -69,7 +69,7 @@ class AgentSystem:
     def start_workflow(self, initial_prompt: str):
         """Start the agent workflow with enhanced debugging"""
         print("\n🚀 Starting workflow...")
-        
+
         # Initialize the group chat with all agents
         agents = [self.user_proxy, self.researcher, self.designer, self.coder]
 
