@@ -11,28 +11,33 @@ class AgentSystem:
         # Create workspace directory if it doesn't exist
         os.makedirs("workspace", exist_ok=True)
 
-        # Configure agents with specific roles
-        self.config = {
+        # Configure common settings for OpenAI
+        self.openai_config = {
             "temperature": 0.7,
-            "model": "gpt-4o",
             "api_key": os.getenv("OPENAI_API_KEY")
         }
 
-        # Research Agent
+        # Configure common settings for Anthropic
+        self.anthropic_config = {
+            "temperature": 0.7,
+            "api_key": os.getenv("ANTHROPIC_API_KEY")
+        }
+
+        # Research Agent with gpt-4o-mini
         self.researcher = autogen.AssistantAgent(
             name="researcher",
             system_message="You are a research expert. Analyze requirements, research best practices, and ask clarifying questions when needed.",
-            llm_config=self.config
+            llm_config={**self.openai_config, "model": "gpt-4o-mini"}  # Specify model here
         )
 
-        # Solution Designer
+        # Solution Designer with gpt-4o
         self.designer = autogen.AssistantAgent(
             name="designer",
             system_message="You are a solution architect. Create detailed technical designs based on research findings.",
-            llm_config=self.config
+            llm_config={**self.openai_config, "model": "gpt-4o"}  # Specify model here
         )
 
-        # User Proxy Agent with code execution config
+        # User Proxy Agent
         code_execution_config = {
             "work_dir": "workspace",
             "use_docker": False,
@@ -44,47 +49,46 @@ class AgentSystem:
             name="user_proxy",
             human_input_mode="TERMINATE",
             max_consecutive_auto_reply=10,
-            is_termination_msg=lambda x: x.get(
-                "content", "").rstrip().endswith("TERMINATE"),
+            is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"),
             code_execution_config=code_execution_config
         )
 
-        # Enhanced Coder Agent
+        # Enhanced Coder Agent with anthropic-sonnet-3.5
         self.coder = autogen.AssistantAgent(
             name="coder",
             system_message="""You are a coding expert who can write both general Python code and Snowflake-specific code.
-    For Snowflake operations:
-    1. Always use environment variables (SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, etc.) from the shell and use python code to connect to Snowflake
-    2. ALWAYS include these elements in your code:
-       - Explicit print statements for all query results
-       - Print statements before and after each operation
-       - Print the actual SQL queries being executed
-       - Print the number of rows returned
-    3. Use this structure for Snowflake queries:
-       - Connect to Snowflake
-       - Print "Executing query: <query>"
-       - Execute query
-       - Fetch results
-       - Print "Results:"
-       - Print actual results (use proper formatting)
-       - Print "Number of rows returned: <count>"
-    4. Include proper error handling with try/except blocks
-    5. Always close connections properly
-    
-    Example format:
-    ```python
-    print("Connecting to Snowflake...")
-    # connection code here
-    print("Executing query: SHOW DATABASES")
-    cursor.execute("SHOW DATABASES")
-    results = cursor.fetchall()
-    print("Results:")
-    for row in results:
-        print(row)
-    print(f"Number of rows returned: {len(results)}")
-    ```
-    """,
-            llm_config=self.config
+            For Snowflake operations:
+            1. Always use environment variables (SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, etc.) from the shell and use python code to connect to Snowflake
+            2. ALWAYS include these elements in your code:
+               - Explicit print statements for all query results
+               - Print statements before and after each operation
+               - Print the actual SQL queries being executed
+               - Print the number of rows returned
+            3. Use this structure for Snowflake queries:
+               - Connect to Snowflake
+               - Print "Executing query: <query>"
+               - Execute query
+               - Fetch results
+               - Print "Results:"
+               - Print actual results (use proper formatting)
+               - Print "Number of rows returned: <count>"
+            4. Include proper error handling with try/except blocks
+            5. Always close connections properly
+            
+            Example format:
+            ```python
+            print("Connecting to Snowflake...")
+            # connection code here
+            print("Executing query: SHOW DATABASES")
+            cursor.execute("SHOW DATABASES")
+            results = cursor.fetchall()
+            print("Results:")
+            for row in results:
+                print(row)
+            print(f"Number of rows returned: {len(results)}")
+            ```
+            """,
+            llm_config={**self.anthropic_config, "model": "anthropic-sonnet-3.5"}  # Specify model here
         )
 
     def start_workflow(self, initial_prompt: str):
