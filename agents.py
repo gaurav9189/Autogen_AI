@@ -32,13 +32,6 @@ class AgentSystem:
             llm_config=self.config
         )
 
-        # Code Generator
-        self.coder = autogen.AssistantAgent(
-            name="enhanced_coder",
-            system_message="You are a coding expert. Generate implementation code based on technical designs.",
-            llm_config=self.config
-        )
-
         # User Proxy Agent with code execution config
         code_execution_config = {
             "work_dir": "workspace",
