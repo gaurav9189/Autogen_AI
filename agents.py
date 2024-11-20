@@ -60,8 +60,7 @@ class AgentSystem:
             max_consecutive_auto_reply=10,
             is_termination_msg=lambda x: x.get(
                 "content", "").rstrip().endswith("TERMINATE"),
-            code_execution_config=code_execution_config,
-            verbose=True
+            code_execution_config=code_execution_config
         )
 
         # Enhanced Coder Agent with anthropic-sonnet-3.5
