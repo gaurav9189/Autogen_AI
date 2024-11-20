@@ -69,6 +69,11 @@ class AgentSystem:
     def start_workflow(self, initial_prompt: str):
         """Start the agent workflow with enhanced debugging"""
         print("\n🚀 Starting workflow...")
+        print("\n📌 Debug: Creating group chat with agents:")
+        print(f"- User Proxy (executor) in workspace: {self.user_proxy.code_execution_config['work_dir']}")
+        print(f"- Researcher: Analysis & Requirements")
+        print(f"- Designer: Technical Architecture")
+        print(f"- Coder: Implementation")
 
         # Initialize the group chat with all agents
         agents = [self.user_proxy, self.researcher, self.designer, self.coder]
@@ -83,6 +88,12 @@ class AgentSystem:
 
         # Start the chat with the initial prompt
         print("\n📋 Initiating chat with workflow steps...")
+        print("\nWorkflow Process:")
+        print("1. User Proxy sends prompt to Group Chat Manager")
+        print("2. Researcher analyzes and responds")
+        print("3. Designer creates technical spec")
+        print("4. Coder writes implementation")
+        print("5. User Proxy executes any code in workspace directory")
         self.user_proxy.initiate_chat(
             manager,
             message=f"""
