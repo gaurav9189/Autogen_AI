@@ -15,33 +15,37 @@ class AgentSystem:
         self.openai_config = {
             "temperature": 0.7,
             "api_key": os.getenv("OPENAI_API_KEY"),
-            "config_list": [{"model": "gpt-4", "api_key": os.getenv("OPENAI_API_KEY")}]
+            "config_list": [{"model": "gpt-4o", "api_key": os.getenv("OPENAI_API_KEY")}]
         }
 
         # Configure settings for Anthropic
         self.anthropic_config = {
             "temperature": 0.7,
-            "use_anthropic": True,
-            "config_list": [{"model": "claude-2", "api_key": os.getenv("ANTHROPIC_API_KEY")}]
+            "api_key": os.getenv("ANTHROPIC_API_KEY"),
+            "config_list": [{"model": "claude-3.5-sonnet", "api_key": os.getenv("ANTHROPIC_API_KEY")}]
         }
 
         # Add debug logging for API keys
         print("\nAPI Key Debug (first 7 chars):")
-        print(f"OpenAI API Key prefix: {os.getenv('OPENAI_API_KEY')[:7] if os.getenv('OPENAI_API_KEY') else 'Not found'}")
-        print(f"Anthropic API Key prefix: {os.getenv('ANTHROPIC_API_KEY')[:7] if os.getenv('ANTHROPIC_API_KEY') else 'Not found'}\n")
+        print(
+            f"OpenAI API Key prefix: {os.getenv('OPENAI_API_KEY')[:7] if os.getenv('OPENAI_API_KEY') else 'Not found'}")
+        print(
+            f"Anthropic API Key prefix: {os.getenv('ANTHROPIC_API_KEY')[:7] if os.getenv('ANTHROPIC_API_KEY') else 'Not found'}\n")
 
         # Research Agent with gpt-4o-mini
         self.researcher = autogen.AssistantAgent(
             name="researcher",
             system_message="You are a research expert. Analyze requirements, research best practices, and ask clarifying questions when needed.",
-            llm_config={**self.openai_config, "model": "gpt-4"}  # Using standard GPT-4
+            # Using standard GPT-4
+            llm_config={**self.openai_config, "model": "gpt-4o-mini"}
         )
 
         # Solution Designer with gpt-4o
         self.designer = autogen.AssistantAgent(
             name="designer",
             system_message="You are a solution architect. Create detailed technical designs based on research findings.",
-            llm_config={**self.openai_config, "model": "gpt-4"}  # Using standard GPT-4
+            # Using standard GPT-4
+            llm_config={**self.openai_config, "model": "gpt-4o"}
         )
 
         # User Proxy Agent
@@ -56,7 +60,8 @@ class AgentSystem:
             name="user_proxy",
             human_input_mode="TERMINATE",
             max_consecutive_auto_reply=10,
-            is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"),
+            is_termination_msg=lambda x: x.get(
+                "content", "").rstrip().endswith("TERMINATE"),
             code_execution_config=code_execution_config
         )
 
