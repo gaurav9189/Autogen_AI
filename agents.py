@@ -14,7 +14,7 @@ class AgentSystem:
         # Configure agents with specific roles
         self.config = {
             "temperature": 0.7,
-            "model": "gpt-3.5-turbo",
+            "model": "gpt-4o",
             "api_key": os.getenv("OPENAI_API_KEY")
         }
 
