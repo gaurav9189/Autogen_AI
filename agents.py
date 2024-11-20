@@ -22,7 +22,11 @@ class AgentSystem:
         self.anthropic_config = {
             "temperature": 0.7,
             "api_key": os.getenv("ANTHROPIC_API_KEY"),
-            "config_list": [{"model": "claude-3.5-sonnet", "api_key": os.getenv("ANTHROPIC_API_KEY")}]
+            "config_list": [{
+                "model": "claude-3.5-sonnet",
+                "api_key": os.getenv("ANTHROPIC_API_KEY"),
+                "api_type": "anthropic"
+            }]
         }
 
         # Add debug logging for API keys
