@@ -46,12 +46,13 @@ class AgentSystem:
             "last_n_messages": 3,
             "timeout": 60,
         }
-        
+
         self.user_proxy = autogen.UserProxyAgent(
             name="user_proxy",
             human_input_mode="TERMINATE",
             max_consecutive_auto_reply=10,
-            is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"),
+            is_termination_msg=lambda x: x.get(
+                "content", "").rstrip().endswith("TERMINATE"),
             code_execution_config=code_execution_config
         )
 
@@ -59,7 +60,7 @@ class AgentSystem:
         self.snowflake_coder = autogen.AssistantAgent(
             name="snowflake_coder",
             system_message="""You are a Snowflake coding expert. Execute Snowflake-specific code using the Python connector.
-            Always import the connection from snowflake_connection.py first in your code blocks.
+            Always import the connection from shell variables- SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, SNOWFLAKE_PASSWORD first in your code blocks.
             Focus on writing clear, executable code blocks that handle errors appropriately.""",
             llm_config=self.config
         )
@@ -75,6 +76,7 @@ class AgentSystem:
             database=os.getenv("SNOWFLAKE_DATABASE"),
             schema=os.getenv("SNOWFLAKE_SCHEMA")
         )
+
     def start_workflow(self, initial_prompt: str, use_snowflake: bool):
         # Initialize the group chat
         agents = [self.user_proxy, self.researcher, self.designer]
@@ -100,7 +102,7 @@ conn = snowflake.connector.connect(
 )
                 """.format(
                     os.getenv("SNOWFLAKE_USER"),
-                    os.getenv("SNOWFLAKE_PASSWORD"), 
+                    os.getenv("SNOWFLAKE_PASSWORD"),
                     os.getenv("SNOWFLAKE_ACCOUNT"),
                     os.getenv("SNOWFLAKE_WAREHOUSE")
                 ))
