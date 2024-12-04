@@ -1,0 +1,82 @@
+# Snowflake PCI Data Classification and Protection Solution Design
+
+## 1. Overview
+
+This solution design addresses the challenge of automating the classification, tagging, and protection of PCI (Payment Card Industry) data within a Snowflake environment. The design follows a three-step approach: Know Your Data, Protect Your Data, and Monitor Your Data.
+
+## 2. Architecture Components
+
+### 2.1 Control Tables and Views
+-  `CLASS_CTRL_TABLE`: Triggers Classification Process for Tables eligible for Classification along with new data ingested as per classification profile
+- `CLASS_MAN_TBL`: Stores external tables/any other data which can contain sensitive data. This is informed by Domain teams
+- CLASS_LOG_TBL: Stores Classification results as triggered by Class_wrapper_proc
+- CLASS_LOG_V: View on top of classification results with flattened out results
+-  `CLASS_REPO_TBL`: Central repository for classification results
+-  `MASK_REPO_TBL`: Synced from CLASS_REPO_TBL, used for updates by domain teams
+- MASK_REPO_LOG_TBL: Stores the results for who updated the MASK_REPO_TBL with the history of updates
+-  `MASK_PCI_V`: Stores information on PCI-tagged columns and their protection status as a view on top of MASK_REPO_TBL
+-  `MTR_PCI_TBL`: Inventory of unmasked PCI-tagged tables
+
+### 2.2 Stored Procedures
+- `CLASS_LOAD_SP`: Populates CLASS_CTRL_TBL for data that needs classification as per Classification profile. I.e. both incremental data and data post classification validity- this logic is maintained as per the classification execution date
+- `CLASS_WRAPPER_PROC`: These are child-parent Stored procedures which iterate through DBs, Schemas and linked tables for running classification process. Successful classification results are logged back in CLASS_CTRL_TBL
+- CLASS_TAG_SP: This is a SP to run system tag allocation on the back of CLASS_LOG_TBL, which stores classification results. CLASS_REPO_TBL is the output of this SP which contains the information on Snowflake’s native classification
+- SP_LOAD_MASK_REPO: The function of this SP is to detect new changes(as per the classification profile, incremental classification more specifically) from the stream on top of CLASS_REPO_TBL and merge the results into MASK_REPO_TBL
+- MASK_REPO_PROC: The function of this SP is to take inputs from Domain teams as part of the review. Some highlighted cases where review is necessary-
+    - False Positive for PCI: Correct the system tag and Apply correct System Tag
+    - False Negative for PCI: Add the Domain or Global PCI tag as the Domain team sees fit
+    - PCI Correct: If GBL PCI Tag is needed for a Platform backed masking policy 
+    - Any Other: Apart from PAN, domain teams can update System tags for other sensitive/PII data
+- `MASK_TAG_PROC`: Applies global PCI tag, domain PCI tag, any other tag as per the review process
+- MTR_NPCI_PROC: Detects new PCI data in MASK_REPO_TBL and sends out an alert
+- `MTR_PCI_PROC`: Monitors PCI data protection
+- `MTR_PCIex_PROC`: Handles exceptions for PCI data protection
+- `MTR_PCIacc_PROC`: Monitors access to protected PCI data
+
+### 2.3 Tags
+- Snowflake System Tags: Applied automatically during classification
+- `GBL_PCI_TAG`: Global tag for platform-aligned masking policy
+- `<DOMAIN>_PCI_TAG`: Domain tag for Domain-aligned masking policy, where each <DOMAIN> represents the business team
+- <DOMAIN>_<custom>_TAG: Any other tag as per request
+
+
+
+## 3. Process Flow
+
+### 3.1 Know Your Data
+1. `CLASS_CTRL_TABLE` triggers classification for eligible Tables
+2. `CLASS_TAG_PROC` runs classification and auto-tagging
+3. Results stored in `CLASS_REPO_TBL`
+4. Alerts sent to domain teams when the ‘payment card’ is detected in classification
+
+### 3.2 Protect Your Data
+1. Domain teams review and update results in `MASK_REPO_TBL`
+2. After 15 days, `MASK_PCI_PROC` applies either Global or Domain PCI tags as per following cases-
+	False Positive for PCI: Correct the system tag and Apply correct System Tag
+	False Negative for PCI: Add the Domain or Global PCI tag as the Domain team sees fit
+	PCI Correct: If GBL PCI Tag is needed for a Platform backed masking policy 
+3. `MASK_PCI_TBL` updated with PCI tagging information
+
+### 3.3 Monitor Your Data
+1. `MTR_PCI_PROC` checks for unprotected PCI columns:-
+	Cases:
+		When only system tag is applied and is PCI 		When Domain_PCI_TAG is attached, ignore the system tag 		When GBL_PCI_TAG is attached, ignore the system tag
+2. Results logged in `MTR_PCI_TBL`
+3. `MTR_PCIex_PROC` handles exceptions
+4. `MTR_PCIacc_PROC` monitors and alerts on unauthorized access
+
+### Orchestration:
+The process runs with a classification Profile as follows-
+age_classification: Time after which classification should be performed again. Example 90 days
+incremental_classification: Time after which new data is classified (new tables, altered tables with more data, ). Example 15 days
+review_frequency: Time during which the review is performed within the incremental classification. Example 10 days
+
+
+## 4. Key Design Decisions
+
+1. Automated re-classification every 15 days on delta data
+2. Domain review for PCI data is mandatory
+3. System Tags used for information purposes only
+4. `GBL_PCI_TAG` simplifies platform-level protection
+5. Exceptions logged for unprotected PCI columns
+6. Continuous monitoring of PCI data access
