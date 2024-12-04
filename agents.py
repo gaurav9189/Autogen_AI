@@ -50,7 +50,7 @@ class AgentSystem:
             "work_dir": "workspace",
             "use_docker": False,
             "last_n_messages": 3,
-            "timeout": 60
+            "timeout": 100
         }
 
         self.user_proxy = autogen.UserProxyAgent(
@@ -73,7 +73,7 @@ class AgentSystem:
             - ALWAYS include code blocks
             
             For Snowflake operations:
-            1. Always use environment variables (SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, etc.) from the shell and use python code to connect to Snowflake
+            1. Always use environment variables (SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, SNOWFLAKE_PASSWORD, SNOWFLAKE_WAREHOUSE) for other details get the details from prompt as they are not defined in shell and use python code to connect to Snowflake
             2. ALWAYS include these elements in your code:
                - Explicit print statements for all query results
                - Print statements before and after each operation
@@ -138,8 +138,8 @@ class AgentSystem:
         """Start the agent workflow with enhanced debugging"""
         print("\n🚀 Starting workflow...")
         print("\n📌 Debug: Creating group chat with agents:")
-        print(
-            f"- User Proxy (executor) in workspace: {self.user_proxy._code_execution_config['work_dir']}")
+        print("User Proxy")
+        # f"- User Proxy (executor) in workspace: {self.user_proxy._code_execution_config['work_dir']}")
         print(f"- Researcher: Analysis & Requirements")
         print(f"- Designer: Technical Architecture")
         print(f"- Coder: Implementation")
